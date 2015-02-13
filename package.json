@@ -50,6 +50,7 @@
     "range_check": "~0.0.5",
     "react": "~0.12.2",
     "react-select": "~0.3.2",
+    "react-widgets": "^2.2.5",
     "scmp": "~1.0.0",
     "semver": "~4.3.0",
     "serve-favicon": "~2.2.0",
