@@ -1,21 +1,18 @@
-var React = require('react'),
-	Field = require('../Field'),
-	Note = require('../../components/Note'),
-	DateInput = require('../../components/DateInput'),
-	moment = require('moment');
+var _ = require('underscore'),
+	React = require('react'),
+	cx = require('classnames'),
+	PureRenderMixin = require('react/addons').PureRenderMixin,
+	DateTimePicker = require('react-widgets').DateTimePicker,
+	moment = require('moment'),
+	Field = require('../Field');
 
 module.exports = Field.create({
 
-	focusTargetRef: 'dateInput',
+	mixins: [PureRenderMixin],
+	
+	focusTargetRef: 'datePicker',
 
-	// default formats
-	inputFormat: 'YYYY-MM-DD',
-
-	getInitialState: function() {
-		return { 
-			value: this.props.value ? moment(this.props.value).format(this.inputFormat) : ''
-		};
-	},
+	inputFormat: 'yyyy-MM-dd',
 
 	getDefaultProps: function() {
 		return { 
@@ -23,61 +20,45 @@ module.exports = Field.create({
 		};
 	},
 
-	// TODO: Move isValid() so we can share with server-side code
-	isValid: function(value) {
-		return moment(value, this.inputFormat).isValid();
-	},
-
-	// TODO: Move format() so we can share with server-side code
-	format: function(dateValue, format) {
-		format = format || this.inputFormat;
-		return dateValue ? moment(this.props.dateValue).format(format) : '';
-	},
-
-	setDate: function(dateValue) {
-		this.setState({ value: dateValue });
+	_change: function(newValue) {
 		this.props.onChange({
 			path: this.props.path,
-			value: this.isValid(dateValue) ? moment(dateValue, this.inputFormat).toISOString() : null
+			value: newValue === null ? newValue : newValue.toISOString()
 		});
 	},
 
-	setToday: function() {
-		this.setDate(moment().format(this.inputFormat));
+	_today: function(event) {
+		var today = moment().toDate();
+		this._change(today);
 	},
 
-	valueChanged: function(value) {
-		this.setDate(value);
+	renderValue: function() {
+		var value = this.props.value ? moment(this.props.value).format(this.props.formatString) : 'No Date';
+		return <div className="field-value">{value}</div>;
 	},
-
-	renderUI: function() {
-		
-		var input, fieldClassName = 'field-ui';
-
-		if (this.shouldRenderField()) {
-			input = (
-				<div className={fieldClassName}>
-					<DateInput ref="dateInput" name={this.props.path} format={this.inputFormat} value={this.state.value} onChange={this.valueChanged} />
-					<button type="button" className="btn btn-default btn-set-today" onClick={this.setToday}>Today</button>
-				</div>
-			);
-		} else {
-			input = (
-				<div className={fieldClassName}>
-					<div className="field-value">{this.format(this.props.value, this.props.formatString)}</div>
-				</div>
-			);
-		}
-		
+	
+	renderField: function() {
+		var value = this.props.value ? moment(this.props.value).toDate() : null;
 		return (
-			<div className="field field-type-date">
-				<label htmlFor={this.props.path} className="field-label">{this.props.label}</label>
-				{input}
-				<div className="col-sm-9 col-md-10 col-sm-offset-3 col-md-offset-2 field-note-wrapper">
-					<Note note={this.props.note} />
+			<div ref="wrapper">
+				<input type="hidden" ref="value" name={this.props.path} value={this.props.value} />
+				<DateTimePicker ref="datePicker" value={value} format={this.inputFormat} onChange={this._change} time={false} />
+					<button type="button" className="btn btn-default btn-set-today" onClick={this._today}>Today</button>
+			</div>
+		);
+	},
+	
+	renderUI: function() {
+		var wrapperClassName = cx('field', 'field-type-' + this.props.type, this.props.className, { 'field-has-label': this.props.label });
+		var fieldClassName = cx('field-ui', 'field-size-small');
+		return (
+			<div className={wrapperClassName}>
+				{this.renderLabel()}
+				<div className={fieldClassName}>
+					{this.shouldRenderField() ? this.renderField() : this.renderValue()}
+					{this.renderNote()}
 				</div>
 			</div>
 		);
 	}
-
 });
