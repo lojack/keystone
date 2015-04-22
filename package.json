@@ -60,6 +60,7 @@
     "store-prototype": "^1.0.1",
     "superagent": "^1.2.0",
     "underscore": "^1.8.3",
+    "reactify": "~1.1.0",
     "vkey": "^1.0.0"
   },
   "devDependencies": {
@@ -78,7 +79,6 @@
     "istanbul": "^0.3.13",
     "mocha": "^2.2.4",
     "must": ">= 0.12 < 1",
-    "reactify": "~1.1.0",
     "rimraf": "^2.3.2",
     "should": "^6.0.1",
     "sinon": "~1.14.1",
