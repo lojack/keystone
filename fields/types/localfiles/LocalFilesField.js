@@ -1,6 +1,6 @@
 var _     = require('underscore'),
 	$	  = require('jquery'),
-	bytes = require('bytes'),
+	//bytes = require('bytes'),
 	React = require('react'),
 	Field = require('../Field');
 
@@ -12,7 +12,7 @@ var ICON_EXTS = [
 ];
 
 var Item = React.createClass({
-	
+
 	render: function () {
 		var filename = this.props.filename;
 		var ext = filename.split('.').pop();
@@ -26,7 +26,7 @@ var Item = React.createClass({
 		body.push(<span className='file-filename'>{filename}</span>);
 
 		if (this.props.size) {
-			body.push(<span className='file-size'>{bytes(this.props.size)}</span>);
+			body.push(<span className='file-size'>{this.props.size}</span>);
 		}
 
 		if (this.props.deleted) {
@@ -45,7 +45,7 @@ var Item = React.createClass({
 
 		return <div className={itemClassName} key={this.props.key}>{body}</div>;
 	}
-	
+
 });
 
 module.exports = Field.create({
