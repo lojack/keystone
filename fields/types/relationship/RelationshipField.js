@@ -1,7 +1,6 @@
 var Select = require('react-select'),
 	React = require('react'),
 	Field = require('../Field'),
-	Note = require('../../components/Note'),
 	superagent = require('superagent'),
 	_ = require('underscore');
 
@@ -82,7 +81,7 @@ module.exports = Field.create({
 		var filters = {};
 		
 		_.each(this.props.filters, function(value, key) {
-			if(_.isString(value) && value[0] == ':') {
+			if(_.isString(value) && value[0] == ':') {//eslint-disable-line eqeqeq
 				var fieldName = value.slice(1);
 
 				var val = this.props.values[fieldName];
@@ -111,7 +110,7 @@ module.exports = Field.create({
 	},
 
 	buildOptionQuery: function (input) {
-		return  'context=relationship&q=' + input +
+		return 'context=relationship&q=' + input +
 				'&list=' + Keystone.list.path +
 				'&field=' + this.props.path +
 				'&' + this.buildFilters();

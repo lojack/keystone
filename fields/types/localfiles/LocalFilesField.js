@@ -1,6 +1,5 @@
 var _     = require('underscore'),
 	$	  = require('jquery'),
-	//bytes = require('bytes'),
 	React = require('react'),
 	Field = require('../Field');
 
@@ -151,9 +150,11 @@ module.exports = Field.create({
 	},
 
 	renderContainer: function () {
-		return <div className='files-container clearfix'>
-			{this.state.items}
-		</div>;
+		return ( 
+			<div className='files-container clearfix'>
+				{this.state.items}
+			</div>
+		);
 	},
 
 	renderFieldAction: function () {

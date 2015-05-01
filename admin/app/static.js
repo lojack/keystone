@@ -8,7 +8,7 @@
 
 var babelify = require('babelify');
 var browserify = require('browserify-middleware');
-var debug = require('debug')('keystone:admin:app:static');
+var debug = require('debug')('keystone:admin:app:static');//eslint-disable-line no-unused-vars
 var express = require('express');
 var packages = require('../packages');
 var router = express.Router();
@@ -17,7 +17,10 @@ router.use('/styles', require('less-middleware')(__dirname + '../../../public/st
 router.use(express.static(__dirname + '../../../public'));
 router.use('/js', browserify(__dirname + '../../../admin/src/views', {
 	external: packages,
-	transform: [babelify]
+	transform: [babelify.configure({
+		ignore: ['**/bootstrap-markdown.js'],
+		plugins: [require('babel-plugin-object-assign')]
+	})]
 }));
 
 module.exports = router;
