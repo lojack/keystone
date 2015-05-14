@@ -7,9 +7,11 @@ module.exports = [
 	'classnames',
 	'marked',
 	'moment',
+	'numeral',
 	'pikaday',
 	'react',
 	'react-select',
+	'react-alt-text',
 	'react/addons',
 	'superagent'
 ];
