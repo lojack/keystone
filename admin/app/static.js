@@ -6,11 +6,13 @@
  * logging, etc) for reduced overhead.
  */
 
-var babelify = require('babelify');
 var browserify = require('./browserify');
 var express = require('express');
-var packages = require('../packages');
+var less = require('less-middleware');
+var path = require('path');
 var router = express.Router();
+
+/* Prepare browserify bundles */
 
 var bundles = {
 	fields: browserify('fields.js', 'FieldTypes'),
@@ -26,7 +28,21 @@ router.prebuild = function() {
 	bundles.list.build();
 };
 
-router.use('/styles', require('less-middleware')(__dirname + '../../public/styles'));
+/* Prepare LESS options */
+
+var reactSelectPath = path.join(path.dirname(require.resolve('react-select')), '..');
+
+var lessOptions = {
+	render: {
+		modifyVars: {
+			reactSelectPath: JSON.stringify(reactSelectPath)
+		}
+	}
+};
+
+/* Configure router */
+
+router.use('/styles', less(__dirname + '../../public/styles', lessOptions));
 router.use(express.static(__dirname + '../../public'));
 router.get('/js/fields.js', bundles.fields.serve);
 router.get('/js/home.js', bundles.home.serve);
