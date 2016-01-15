@@ -1,97 +1,60 @@
-const React = require('react');
-const ReactDOM = require('react-dom');
-const request = require('superagent');
-
-const CreateForm = require('../components/CreateForm');
-const EditForm = require('../components/EditForm');
-const EditFormHeader = require('../components/EditFormHeader');
-const FlashMessages = require('../components/FlashMessages');
-const Footer = require('../components/Footer');
-const MobileNavigation = require('../components/MobileNavigation');
-const PrimaryNavigation = require('../components/PrimaryNavigation');
-const SecondaryNavigation = require('../components/SecondaryNavigation');
-
-const { Container, Spinner } = require('elemental');
-
-var RelatedItemsList = React.createClass({
-	render () {
-		var json = JSON.stringify(Keystone.list.relationships, null, '  ');
-		return (
-			<span>
-				{json}
-			</span>
-		);
-	}
-});
-
+import React from 'react';
+import ReactDOM from 'react-dom';
+import Columns from '../columns';
+import Lists from '../stores/Lists';
+import CreateForm from '../components/CreateForm';
+import EditForm from '../components/EditForm';
+import EditFormHeader from '../components/EditFormHeader';
+import FlashMessages from '../components/FlashMessages';
+import Footer from '../components/Footer';
+import MobileNavigation from '../components/MobileNavigation';
+import PrimaryNavigation from '../components/PrimaryNavigation';
+import RelatedItemsList from '../components/RelatedItemsList';
+import SecondaryNavigation from '../components/SecondaryNavigation';
+import { Alert, Container, Spinner } from 'elemental';
 
 var ItemView = React.createClass({
-
 	displayName: 'ItemView',
-
 	getInitialState () {
 		return {
 			createIsOpen: false,
-			itemData: null
+			itemData: null,
 		};
 	},
-
 	componentDidMount () {
 		this.loadItemData();
 	},
-
 	loadItemData () {
-		request.get('/keystone/api/' + this.props.list.path + '/' + this.props.itemId + '?drilldown=true')
-			.set('Accept', 'application/json')
-			.end((err, res) => {
-				if (err || !res.ok) {
-					// TODO: nicer error handling
-					console.log('Error loading item data:', res ? res.text : err);
-					alert('Error loading data (details logged to console)');
-					return;
-				}
-				this.setState({
-					itemData: res.body
-				});
-			});
+		this.props.list.loadItem(this.props.itemId, { drilldown: true }, (err, itemData) => {
+			if (err || !itemData) {
+				// TODO: nicer error handling
+				console.log('Error loading item data', err);
+				alert('Error loading data (details logged to console)');
+				return;
+			}
+			this.setState({ itemData });
+		});
 	},
-
 	toggleCreate (visible) {
 		this.setState({
-			createIsOpen: visible
+			createIsOpen: visible,
 		});
 	},
-
 	renderRelationships () {
-		var relationships = [];
-		for (var relName in this.props.list.relationships) {
-			relationships.push(this.props.list.relationships[relName]);
-		}
-		relationships = relationships.map((relationship) => {
-			var unusedForNow = (
-				<RelatedItemsList relationship={relationship} relatedItemId={this.props.itemId} />
-			);
-			var filter = JSON.stringify({
-				match: 'exact',
-				inverted: 'false',
-				value: this.props.itemId
-			});
-			var link = '/keystone/' + relationship.ref + '?' + relationship.refPath + '=' + filter;
-			return (
-				<ul>
-					<li>{relationship.path} ({relationship.ref} list) <a href={link}>visit</a>
-					</li>
-				</ul>
-			);
-		});
+		let { relationships } = this.props.list;
+		let keys = Object.keys(relationships);
+		if (!keys.length) return;
 		return (
-			<Container>
-				<h4>Relationships</h4>
-				{relationships}
-			</Container>
+			<div>
+				<h2>Relationships</h2>
+				{keys.map(key => {
+					let relationship = relationships[key];
+					let refList = Lists[relationship.ref];
+					return <RelatedItemsList key={relationship.path} list={this.props.list} refList={refList} relatedItemId={this.props.itemId} relationship={relationship} />;
+				})}
+			</div>
 		);
 	},
-
 	render () {
 		if (!this.state.itemData) return <div className="view-loading-indicator"><Spinner size="md" /></div>;
 		return (
@@ -123,22 +86,13 @@ var ItemView = React.createClass({
 						<CreateForm
 							list={this.props.list}
 							isOpen={this.state.createIsOpen}
-							onCancel={this.toggleCreate.bind(this, false)} />
+							onCancel={() => this.toggleCreate(false)} />
 						<FlashMessages
 							messages={this.props.messages} />
 						<EditForm
 							list={this.props.list}
 							data={this.state.itemData} />
-						{ this.renderRelationships() }
-						{/*
-						TODO:
-							New component for item relationships:
-							<ItemRelationships list={this.props.list} itemId={this.props.itemId} />
-
-							The ItemRelationships component would loop through defined relationships,
-							and render a component for each:
-							<RelatedItemsList relationship={relationship} relatedItemId={this.props.itemId} />
-						*/}
+						{this.renderRelationships()}
 					</Container>
 				</div>
 				<Footer
@@ -150,8 +104,7 @@ var ItemView = React.createClass({
 					version={this.props.version} />
 			</div>
 		);
-	}
-
+	},
 });
 
 ReactDOM.render(
@@ -160,7 +113,7 @@ ReactDOM.render(
 		backUrl={Keystone.backUrl}
 		brand={Keystone.brand}
 		itemId={Keystone.itemId}
-		list={Keystone.list}
+		list={Lists[Keystone.list.key]}
 		messages={Keystone.messages}
 		nav={Keystone.nav}
 		signoutUrl={Keystone.signoutUrl}

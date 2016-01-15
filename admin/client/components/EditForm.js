@@ -1,18 +1,23 @@
-var moment = require('moment');
-var React = require('react');
-var Fields = require('../fields');
-var FormHeading = require('./FormHeading');
-var AltText = require('./AltText');
-var FooterBar = require('./FooterBar');
-var InvalidFieldType = require('./InvalidFieldType');
-
-var { Button, Col, Form, FormField, FormInput, ResponsiveText, Row } = require('elemental');
+import React from 'react';
+import moment from 'moment';
+import ConfirmationDialog from './ConfirmationDialog';
+import Fields from '../fields';
+import FormHeading from './FormHeading';
+import AltText from './AltText';
+import FooterBar from './FooterBar';
+import InvalidFieldType from './InvalidFieldType';
+import { Button, Col, Form, FormField, FormInput, ResponsiveText, Row } from 'elemental';
 
 var EditForm = React.createClass({
 	displayName: 'EditForm',
+	propTypes: {
+		data: React.PropTypes.object,
+		list: React.PropTypes.object,
+	},
 	getInitialState () {
 		return {
-			values: Object.assign({}, this.props.data.fields)
+			values: Object.assign({}, this.props.data.fields),
+			confirmationDialog: null,
 		};
 	},
 	getFieldProps (field) {
@@ -24,10 +29,51 @@ var EditForm = React.createClass({
 		return props;
 	},
 	handleChange (event) {
-		var values = this.state.values;
+		let values = Object.assign({}, this.state.values);
+
 		values[event.path] = event.value;
+		this.setState({ values });
+	},
+	confirmReset(event) {
+		const confirmationDialog = (
+			<ConfirmationDialog
+				body={`Reset your changes to <strong>${this.props.data.name}</strong>?`}
+				confirmationLabel="Reset"
+				onCancel={this.removeConfirmationDialog}
+				onConfirmation={this.handleReset}
+			/>
+		);
+		event.preventDefault();
+		this.setState({ confirmationDialog });
+	},
+	handleReset () {
+		window.location.reload();
+	},
+	confirmDelete() {
+		const confirmationDialog = (
+			<ConfirmationDialog
+				body={`Are you sure you want to delete <strong>${this.props.data.name}?</strong><br /><br />This cannot be undone.`}
+				confirmationLabel="Delete"
+				onCancel={this.removeConfirmationDialog}
+				onConfirmation={this.handleDelete}
+			/>
+		);
+		this.setState({ confirmationDialog });
+	},
+	handleDelete () {
+		let { data, list } = this.props;
+		list.deleteItem(data.id, err => {
+			if (err) {
+				console.error(`Problem deleting ${list.singular}: ${data.name}`);
+				// TODO: slow a flash message on form
+				return;
+			}
+			top.location.href = `${Keystone.adminPath}/${list.path}`;
+		});
+	},
+	removeConfirmationDialog () {
 		this.setState({
-			values: values
+			confirmationDialog: null,
 		});
 	},
 	renderKeyOrId () {
@@ -56,21 +102,19 @@ var EditForm = React.createClass({
 	renderNameField () {
 		var nameField = this.props.list.nameField;
 		var nameIsEditable = this.props.list.nameIsEditable;
-		function wrapNameField(field) {
-			return (
-				<div className="EditForm__name-field">
-					{field}
-				</div>
-			);
-		}
+		var wrapNameField = field => (
+			<div className="EditForm__name-field">
+				{field}
+			</div>
+		);
 		if (nameIsEditable) {
 			var nameFieldProps = this.getFieldProps(nameField);
-			nameFieldProps.label = false;
+			nameFieldProps.label = null;
 			nameFieldProps.size = 'full';
 			nameFieldProps.inputProps = {
 				className: 'item-name-field',
 				placeholder: nameField.label,
-				size: 'lg'
+				size: 'lg',
 			};
 			return wrapNameField(
 				React.createElement(Fields[nameField.type], nameFieldProps)
@@ -81,67 +125,61 @@ var EditForm = React.createClass({
 			);
 		}
 	},
-
 	renderFormElements () {
-		var elements = [];
 		var headings = 0;
-		this.props.list.uiElements.map((el) => {
+
+		return this.props.list.uiElements.map((el) => {
 			if (el.type === 'heading') {
 				headings++;
 				el.options.values = this.state.values;
 				el.key = 'h-' + headings;
-				elements.push(React.createElement(FormHeading, el));
-			} else if (el.type === 'field') {
+				return React.createElement(FormHeading, el);
+			}
+
+			if (el.type === 'field') {
 				var field = this.props.list.fields[el.field];
 				var props = this.getFieldProps(field);
 				if ('function' !== typeof Fields[field.type]) {
-					elements[field.path] = React.createElement(InvalidFieldType, { type: field.type, path: field.path });
-					return;
+					return React.createElement(InvalidFieldType, { type: field.type, path: field.path, key: field.path });
 				}
 				if (props.dependsOn) {
 					props.currentDependencies = {};
-					Object.keys(props.dependsOn).forEach(function (dep) {
+					Object.keys(props.dependsOn).forEach(dep => {
 						props.currentDependencies[dep] = this.state.values[dep];
-					}, this);
+					});
 				}
 				props.key = field.path;
-				elements.push(React.createElement(Fields[field.type], props));
+				return React.createElement(Fields[field.type], props);
 			}
 		}, this);
-		return elements;
 	},
-
 	renderFooterBar () {
-		var footer = [
+		var buttons = [
 			<Button key="save" type="primary" submit>Save</Button>
 		];
-		// TODO: Confirm: Use React & Modal
-		footer.push(
-			<Button key="reset" href={'/keystone/' + this.props.list.path + '/' + this.props.data.id} type="link-cancel" data-confirm="Are you sure you want to reset your changes?">
+		buttons.push(
+			<Button key="reset" onClick={this.confirmReset} type="link-cancel">
 				<ResponsiveText hiddenXS="reset changes" visibleXS="reset" />
 			</Button>
 		);
 		if (!this.props.list.nodelete) {
-			// TODO: Confirm: Use React & Modal
-			footer.push(
-				<Button key="del" href={'/keystone/' + this.props.list.path + '?delete=' + this.props.data.id + Keystone.csrf.query} type="link-delete" className="u-float-right" data-confirm={'Are you sure you want to delete this?' + this.props.list.singular.toLowerCase()}>
+			buttons.push(
+				<Button key="del" onClick={this.confirmDelete} type="link-delete" className="u-float-right">
 					<ResponsiveText hiddenXS={`delete ${this.props.list.singular.toLowerCase()}`} visibleXS="delete" />
 				</Button>
 			);
 		}
 		return (
 			<FooterBar className="EditForm__footer">
-				{footer}
+				{buttons}
 			</FooterBar>
 		);
 	},
-
 	renderTrackingMeta () {
 		if (!this.props.list.tracking) return null;
 
 		var elements = [];
 		var data = {};
-		var label;
 
 		if (this.props.list.tracking.createdAt) {
 			data.createdAt = this.props.data.fields[this.props.list.tracking.createdAt];
@@ -156,7 +194,6 @@ var EditForm = React.createClass({
 
 		if (this.props.list.tracking.createdBy) {
 			data.createdBy = this.props.data.fields[this.props.list.tracking.createdBy];
-			var label = this.props.list.tracking.createdAt ? 'by' : 'Created by';
 			if (data.createdBy) {
 				// todo: harden logic around user name
 				elements.push(
@@ -180,7 +217,6 @@ var EditForm = React.createClass({
 
 		if (this.props.list.tracking.updatedBy) {
 			data.updatedBy = this.props.data.fields[this.props.list.tracking.updatedBy];
-			var label = this.props.list.tracking.createdAt ? 'by' : 'Updated by';
 			if (data.updatedBy && (!data.createdBy || data.createdBy.id !== data.updatedBy.id || elements.updatedAt)) {
 				elements.push(
 					<FormField key="updatedBy" label="Updated by">
@@ -197,7 +233,6 @@ var EditForm = React.createClass({
 			</div>
 		) : null;
 	},
-
 	render () {
 		return (
 			<form method="post" encType="multipart/form-data" className="EditForm-container">
@@ -215,10 +250,10 @@ var EditForm = React.createClass({
 					<Col lg="1/4"><span /></Col>
 				</Row>
 				{this.renderFooterBar()}
+				{this.state.confirmationDialog}
 			</form>
 		);
-	}
-
+	},
 });
 
 module.exports = EditForm;

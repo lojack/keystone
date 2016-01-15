@@ -1,4 +1,4 @@
-var React = require('react');
+import React from 'react';
 
 const buttonBaseClassname = 'Popout__footer__button Popout__footer__button--';
 
@@ -12,27 +12,24 @@ var PopoutFooter = React.createClass({
 		secondaryButtonAction: React.PropTypes.func,
 		secondaryButtonLabel: React.PropTypes.string,
 	},
-	
 	renderPrimaryButton () {
 		if (!this.props.primaryButtonLabel) return null;
-		
+
 		return (
 			<button type={this.props.primaryButtonIsSubmit ? 'submit' : 'button'} className={buttonBaseClassname + 'primary'} onClick={this.props.primaryButtonAction}>
 				{this.props.primaryButtonLabel}
 			</button>
 		);
 	},
-	
 	renderSecondaryButton () {
 		if (!this.props.secondaryButtonAction || !this.props.secondaryButtonLabel) return null;
-		
+
 		return (
 			<button type="button" className={buttonBaseClassname + 'secondary'} onClick={this.props.secondaryButtonAction}>
 				{this.props.secondaryButtonLabel}
 			</button>
 		);
 	},
-	
 	render () {
 		return (
 			<div className="Popout__footer">
@@ -41,8 +38,7 @@ var PopoutFooter = React.createClass({
 				{this.props.children}
 			</div>
 		);
-	}
-	
+	},
 });
 
 module.exports = PopoutFooter;

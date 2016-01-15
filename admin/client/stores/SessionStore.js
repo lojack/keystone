@@ -1,12 +1,13 @@
-const Store = require('store-prototype');
-const xhr = require('xhr');
+'use strict';
 
-const fn = function () {};
+import Store from 'store-prototype';
+import xhr from 'xhr';
 
-var csrfHeaders = {};
-csrfHeaders[Keystone.csrf_header_key] = Keystone.csrf_token_value;
+var csrfHeaders = {
+	[Keystone.csrf_header_key]: Keystone.csrf_token_value
+};
 
-var _user = Keystone.user;
+let { user, adminPath } = Keystone;
 
 function callbackResponse (callback) {
 	return function (err, resp, body) {
@@ -19,24 +20,24 @@ function callbackResponse (callback) {
 
 var SessionStore = new Store({
 	getUser () {
-		return _user;
+		return user;
 	},
 	signin (options, callback) {
 		xhr({
-			url: '/keystone/api/session/signin',
+			url: `${adminPath}/api/session/signin`,
 			method: 'post',
 			json: options,
-			headers: csrfHeaders
+			headers: csrfHeaders,
 		}, callbackResponse(callback));
 	},
 	signout (callback) {
-		callback = callback || fn;
+		callback = callback || function () {};
 		xhr({
-			url: '/keystone/api/session/signout',
+			url: `${adminPath}/api/session/signout`,
 			method: 'post',
-			json: {}
+			json: {},
 		}, callbackResponse(callback));
-	}
+	},
 });
 
 export default SessionStore;

@@ -1,11 +1,8 @@
 import { FormNote } from 'elemental';
-import classNames from 'classnames';
 import React from 'react';
 import Popout from './Popout';
 import PopoutList from './PopoutList';
-import Transition from 'react-addons-css-transition-group';
 import vkey from 'vkey';
-
 import CurrentListStore from '../stores/CurrentListStore';
 
 var ListSort = React.createClass({
@@ -13,7 +10,7 @@ var ListSort = React.createClass({
 	getInitialState () {
 		return {
 			altDown: false,
-			popoutIsOpen: false
+			popoutIsOpen: false,
 		};
 	},
 	componentDidMount () {
@@ -106,7 +103,7 @@ var ListSort = React.createClass({
 				</Popout>
 			</span>
 		);
-	}
+	},
 });
 
 module.exports = ListSort;

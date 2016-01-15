@@ -1,12 +1,9 @@
-const React = require('react');
-const Select = require ('react-select');
-const Fields = require('../fields');
-const { plural } = require('../utils');
-const { Alert, BlankState, Button, Form, Modal } = require('elemental');
-
-function pluck(arr, key) {
-	return arr.map(obj => obj[key]);
-}
+import React from 'react';
+import ReactDOM from 'react-dom';
+import Select from 'react-select';
+import Fields from '../fields';
+import { plural } from '../utils';
+import { BlankState, Button, Form, Modal } from 'elemental';
 
 var UpdateForm = React.createClass({
 	displayName: 'UpdateForm',
@@ -18,15 +15,15 @@ var UpdateForm = React.createClass({
 	},
 	getDefaultProps () {
 		return {
-			isOpen: false
+			isOpen: false,
 		};
 	},
 	getInitialState () {
 		return {
-			fields: []
+			fields: [],
 		};
 	},
-	componentDidUpdate (prevProps, prevState) {
+	componentDidUpdate () {
 		if (this.refs.focusTarget) {
 			this.refs.focusTarget.focus();
 		}
@@ -36,7 +33,6 @@ var UpdateForm = React.createClass({
 			this.refs.focusTarget.focus();
 		}
 	},
-
 	getOptions () {
 		let { fields } = this.props.list;
 		return Object.keys(fields).map(key => ({ value: fields[key].path, label: fields[key].label }));
@@ -50,26 +46,25 @@ var UpdateForm = React.createClass({
 		props.key = field.path;
 		return props;
 	},
-	updateOptions (simpleValue, expandedValues) {
+	updateOptions (fields) {
 		this.setState({
-			fields: expandedValues
+			fields: fields,
 		}, () => {
-			// TODO: @jedwatson you can see the select field stealing focus back
-			this.refs.focusTarget.getDOMNode().focus();
+			ReactDOM.findDOMNode(this.refs.focusTarget).focus();
 		});
 	},
 	handleChange (value) {
 		console.log('handleChange:', value);
 	},
-	handleClose (value) {
+	handleClose () {
 		this.setState({
-			fields: []
+			fields: [],
 		});
 		this.props.onCancel();
 	},
 
 	renderFields () {
-		let { itemIds, list } = this.props;
+		let { list } = this.props;
 		let { fields } = this.state;
 		let formFields = [];
 		let focusRef;
@@ -103,7 +98,7 @@ var UpdateForm = React.createClass({
 	renderForm () {
 		let { itemIds, list } = this.props;
 		let itemCount = plural(itemIds, ('* ' + list.singular), ('* ' + list.plural));
-		let formAction = '/keystone/' + list.path;
+		let formAction = `${Keystone.adminPath}/${list.path}`;
 
 		return (
 			<Form type="horizontal" encType="multipart/form-data" method="post" action={formAction}>
@@ -128,7 +123,6 @@ var UpdateForm = React.createClass({
 			</Modal>
 		);
 	}
-
 });
 
 module.exports = UpdateForm;

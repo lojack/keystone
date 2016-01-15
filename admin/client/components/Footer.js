@@ -1,5 +1,3 @@
-import blacklist from 'blacklist';
-import classnames from 'classnames';
 import React from 'react';
 import { Container } from 'elemental';
 
@@ -20,7 +18,7 @@ var Footer = React.createClass({
 		return (
 			<span>
 				<span>Signed in as </span>
-				<a href={'/keystone/' + User.path + '/' + user.id} tabIndex="-1" className="keystone-footer__link">
+				<a href={`${Keystone.adminPath}/${User.path}/${user.id}`} tabIndex="-1" className="keystone-footer__link">
 					{User.getDocumentName(user)}
 				</a>
 				<span>.</span>
@@ -41,7 +39,7 @@ var Footer = React.createClass({
 				</Container>
 			</footer>
 		);
-	}
+	},
 });
 
 module.exports = Footer;

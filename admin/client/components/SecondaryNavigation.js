@@ -1,13 +1,11 @@
-import blacklist from 'blacklist';
-import classnames from 'classnames';
 import React from 'react';
 import { Container } from 'elemental';
 
 var SecondaryNavItem = React.createClass({
 	displayName: 'SecondaryNavItem',
 	propTypes: {
-		className: React.PropTypes.string,
 		children: React.PropTypes.node.isRequired,
+		className: React.PropTypes.string,
 		href: React.PropTypes.string.isRequired,
 		title: React.PropTypes.string,
 	},
@@ -31,21 +29,21 @@ var SecondaryNavigation = React.createClass({
 	getInitialState() {
 		return {};
 	},
-	componentDidMount: function() {
+	componentDidMount () {
 		this.handleResize();
 		window.addEventListener('resize', this.handleResize);
 	},
-	componentWillUnmount: function() {
+	componentWillUnmount () {
 		window.removeEventListener('resize', this.handleResize);
 	},
-	handleResize: function() {
+	handleResize () {
 		this.setState({
 			navIsVisible: this.props.lists && this.props.lists.length > 1 && window.innerWidth >= 768
 		});
 	},
 	renderNavigation (lists) {
 		let navigation = lists.map((list) => {
-			let href = list.external ? list.path : ('/keystone/' + list.path);
+			let href = list.external ? list.path : `${Keystone.adminPath}/${list.path}`;
 			let className = (this.props.currentListKey && this.props.currentListKey === list.path) ? 'active' : null;
 
 			return (
@@ -71,7 +69,7 @@ var SecondaryNavigation = React.createClass({
 				</Container>
 			</nav>
 		);
-	}
+	},
 });
 
 module.exports = SecondaryNavigation;

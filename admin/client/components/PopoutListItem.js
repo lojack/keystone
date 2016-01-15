@@ -1,6 +1,6 @@
+import React from 'react';
 import blacklist from 'blacklist';
 import classnames from 'classnames';
-import React from 'react';
 
 var PopoutListItem = React.createClass({
 	displayName: 'PopoutListItem',
@@ -49,7 +49,7 @@ var PopoutListItem = React.createClass({
 				<span className="PopoutList__item__label">{this.props.label}</span>
 			</button>
 		);
-	}
+	},
 });
 
 module.exports = PopoutListItem;

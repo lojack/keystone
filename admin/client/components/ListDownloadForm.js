@@ -1,12 +1,8 @@
-import classnames from 'classnames';
 import React from 'react';
-import Transition from 'react-addons-css-transition-group';
-
-var CurrentListStore = require('../stores/CurrentListStore');
-var Popout = require('./Popout');
-var PopoutList = require('./PopoutList');
-
-var { Button, Checkbox, Form, FormField, InputGroup, SegmentedControl } = require('elemental');
+import CurrentListStore from '../stores/CurrentListStore';
+import Popout from './Popout';
+import PopoutList from './PopoutList';
+import { Button, Checkbox, Form, FormField, InputGroup, SegmentedControl } from 'elemental';
 
 const FORMAT_OPTIONS = [
 	{ label: 'CSV', value: 'csv' },
@@ -14,6 +10,9 @@ const FORMAT_OPTIONS = [
 ];
 
 var ListDownloadForm = React.createClass({
+	propTypes: {
+		className: React.PropTypes.string.isRequired,
+	},
 	getInitialState () {
 		return {
 			format: FORMAT_OPTIONS[0].value,
@@ -39,38 +38,36 @@ var ListDownloadForm = React.createClass({
 	},
 	togglePopout (visible) {
 		this.setState({
-			isOpen: visible
+			isOpen: visible,
 		});
 	},
 	toggleColumn (column, value) {
-		let newColumns = this.state.selectedColumns;
+		let newColumns = Object.assign({}, this.state.selectedColumns);
 		if (value) {
 			newColumns[column] = value;
 		} else {
 			delete newColumns[column];
 		}
 		this.setState({
-			selectedColumns: newColumns
+			selectedColumns: newColumns,
 		});
 	},
 	changeFormat (value) {
 		this.setState({
-			format: value
+			format: value,
 		});
 	},
 	toggleCurrentlySelectedColumns (e) {
 		let newState = {
 			useCurrentColumns: e.target.checked,
-			selectedColumns: this.getDefaultSelectedColumns()
+			selectedColumns: this.getDefaultSelectedColumns(),
 		};
 		this.setState(newState);
 	},
-
 	handleDownloadRequest () {
 		CurrentListStore.downloadItems(this.state.format, Object.keys(this.state.selectedColumns));
 		this.togglePopout(false);
 	},
-
 	renderColumnSelect () {
 		if (this.state.useCurrentColumns) return null;
 
@@ -89,7 +86,7 @@ var ListDownloadForm = React.createClass({
 					iconHover={columnValue ? 'dash' : 'check'}
 					isSelected={columnValue}
 					label={el.field.label}
-					onClick={this.toggleColumn.bind(this, columnKey, !columnValue)} />
+					onClick={() => this.toggleColumn(columnKey, !columnValue)} />
 			);
 		});
 
@@ -99,19 +96,17 @@ var ListDownloadForm = React.createClass({
 			</div>
 		);
 	},
-
 	render () {
-		let { list } = this.props;
 		let { useCurrentColumns } = this.state;
 
 		return (
 			<InputGroup.Section className={this.props.className}>
-				<Button id="listHeaderDownloadButton" isActive={this.state.isOpen} onClick={this.togglePopout.bind(this, !this.state.isOpen)}>
+				<Button id="listHeaderDownloadButton" isActive={this.state.isOpen} onClick={() => this.togglePopout(!this.state.isOpen)}>
 					<span className={this.props.className + '__icon octicon octicon-cloud-download'} />
 					<span className={this.props.className + '__label'}>Download</span>
 					<span className="disclosure-arrow" />
 				</Button>
-				<Popout isOpen={this.state.isOpen} onCancel={this.togglePopout.bind(this, false)} relativeToID="listHeaderDownloadButton">
+				<Popout isOpen={this.state.isOpen} onCancel={() => this.togglePopout(false)} relativeToID="listHeaderDownloadButton">
 					<Popout.Header title="Download" />
 					<Popout.Body scrollable>
 						<Form type="horizontal" component="div">
@@ -119,7 +114,7 @@ var ListDownloadForm = React.createClass({
 								<SegmentedControl equalWidthSegments options={FORMAT_OPTIONS} value={this.state.format} onChange={this.changeFormat} />
 							</FormField>
 							<FormField label="Columns:">
-								<Checkbox focusOnMount label="Use currently selected" onChange={this.toggleCurrentlySelectedColumns} value={true} checked={useCurrentColumns} />
+								<Checkbox autofocus label="Use currently selected" onChange={this.toggleCurrentlySelectedColumns} value={true} checked={useCurrentColumns} />
 							</FormField>
 							{this.renderColumnSelect()}
 						</Form>
@@ -127,13 +122,12 @@ var ListDownloadForm = React.createClass({
 					<Popout.Footer
 						primaryButtonAction={this.handleDownloadRequest}
 						primaryButtonLabel="Download"
-						secondaryButtonAction={this.togglePopout.bind(this, false)}
+						secondaryButtonAction={() => this.togglePopout(false)}
 						secondaryButtonLabel="Cancel" />
 				</Popout>
 			</InputGroup.Section>
 		);
-	}
-
+	},
 });
 
 module.exports = ListDownloadForm;

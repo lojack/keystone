@@ -1,10 +1,12 @@
 import _ from 'underscore';
 import $ from 'jquery';
 import React from 'react';
+import ReactDOM from 'react-dom';
 import Field from '../Field';
 import Select from 'react-select';
 import { Button, FormField, FormInput, FormNote } from 'elemental';
 import Lightbox from '../../../admin/client/components/Lightbox';
+import classnames from 'classnames';
 
 /**
  * TODO:
@@ -13,6 +15,18 @@ import Lightbox from '../../../admin/client/components/Lightbox';
  */
 
 const SUPPORTED_TYPES = ['image/gif', 'image/png', 'image/jpeg', 'image/bmp', 'image/x-icon', 'application/pdf', 'image/x-tiff', 'image/x-tiff', 'application/postscript', 'image/vnd.adobe.photoshop', 'image/svg+xml'];
+
+const iconClassUploadPending = [
+	'upload-pending',
+	'mega-octicon',
+	'octicon-cloud-upload'
+];
+
+const iconClassDeletePending = [
+	'delete-pending',
+	'mega-octicon',
+	'octicon-x'
+];
 
 module.exports = Field.create({
 
@@ -50,11 +64,11 @@ module.exports = Field.create({
 	},
 
 	fileFieldNode () {
-		return this.refs.fileField.getDOMNode();
+		return ReactDOM.findDOMNode(this.refs.fileField);
 	},
 
 	changeImage () {
-		this.refs.fileField.getDOMNode().click();
+		this.fileFieldNode().click();
 	},
 
 	getImageSource () {
@@ -124,7 +138,7 @@ module.exports = Field.create({
 	removeImage  (e) {
 		var state = {
 			localSource: null,
-			origin: false
+			origin: false,
 		};
 
 		if (this.hasLocal()) {
@@ -176,14 +190,15 @@ module.exports = Field.create({
 	 */
 	renderImagePreview () {
 		var iconClassName;
-		var className = 'image-preview';
+		var className = ['image-preview'];
 
 		if (this.hasLocal()) {
-			iconClassName = 'upload-pending mega-octicon octicon-cloud-upload';
+			iconClassName = classnames(iconClassUploadPending);
 		} else if (this.state.removeExisting) {
-			className += ' removed';
-			iconClassName = 'delete-pending mega-octicon octicon-x';
+			className.push(' removed');
+			iconClassName = classnames(iconClassDeletePending);
 		}
+		className = classnames(className);
 
 		var body = [this.renderImagePreviewThumbnail()];
 		if (iconClassName) body.push(<div key={this.props.path + '_preview_icon'} className={iconClassName} />);
@@ -200,7 +215,16 @@ module.exports = Field.create({
 	},
 
 	renderImagePreviewThumbnail () {
-		return <img key={this.props.path + '_preview_thumbnail'} className="img-load" style={ { height: '90' } } src={this.getImageSource()} />;
+		var url = this.getImageURL();
+
+		if (url) {
+			// add cloudinary thumbnail parameters to the url
+			url = url.replace(/image\/upload/, 'image/upload/c_thumb,g_face,h_90,w_90');
+		} else {
+			url = this.getImageSource();
+		}
+
+		return <img key={this.props.path + '_preview_thumbnail'} className="img-load" style={ { height: '90' } } src={url} />;
 	},
 
 	/**
@@ -312,7 +336,7 @@ module.exports = Field.create({
 	renderImageSelect () {
 		var selectPrefix = this.props.selectPrefix;
 		var getOptions = function(input, callback) {
-			$.get('/keystone/api/cloudinary/autocomplete', {
+			$.get(Keystone.adminPath + '/api/cloudinary/autocomplete', {
 				dataType: 'json',
 				data: {
 					q: input
@@ -339,7 +363,6 @@ module.exports = Field.create({
 			<div className="image-select">
 				<Select
 					placeholder="Search for an image from Cloudinary ..."
-					className="ui-select2-cloudinary"
 					name={this.props.paths.select}
 					id={'field_' + this.props.paths.select}
 					asyncOptions={getOptions}

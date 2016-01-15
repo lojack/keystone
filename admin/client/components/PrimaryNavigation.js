@@ -1,13 +1,11 @@
-import blacklist from 'blacklist';
-import classnames from 'classnames';
 import React from 'react';
 import { Container } from 'elemental';
 
 var PrimaryNavItem = React.createClass({
 	displayName: 'PrimaryNavItem',
 	propTypes: {
-		className: React.PropTypes.string,
 		children: React.PropTypes.node.isRequired,
+		className: React.PropTypes.string,
 		href: React.PropTypes.string.isRequired,
 		title: React.PropTypes.string,
 	},
@@ -33,14 +31,14 @@ var PrimaryNavigation = React.createClass({
 	getInitialState() {
 		return {};
 	},
-	componentDidMount: function() {
+	componentDidMount () {
 		this.handleResize();
 		window.addEventListener('resize', this.handleResize);
 	},
-	componentWillUnmount: function() {
+	componentWillUnmount () {
 		window.removeEventListener('resize', this.handleResize);
 	},
-	handleResize: function() {
+	handleResize () {
 		this.setState({
 			navIsVisible: window.innerWidth >= 768
 		});
@@ -49,24 +47,25 @@ var PrimaryNavigation = React.createClass({
 		if (!this.props.signoutUrl) return null;
 
 		return (
-			<ul className="app-nav app-nav--primary app-nav--right">
-				<PrimaryNavItem href={this.props.signoutUrl} title="Sign Out">
-					<span className="octicon octicon-sign-out" />
-				</PrimaryNavItem>
-			</ul>
+			<PrimaryNavItem href={this.props.signoutUrl} title="Sign Out">
+				<span className="octicon octicon-sign-out" />
+			</PrimaryNavItem>
 		);
 	},
 	renderFrontLink () {
 		return (
-			<PrimaryNavItem href="/" title={'Front page - ' + this.props.brand}>
-				<span className="octicon octicon-globe" />
-			</PrimaryNavItem>
+			<ul className="app-nav app-nav--primary app-nav--right">
+				<PrimaryNavItem href="/" title={'Front page - ' + this.props.brand}>
+					<span className="octicon octicon-globe" />
+				</PrimaryNavItem>
+				{this.renderSignout()}
+			</ul>
 		);
 	},
 	renderBrand () {
 		// TODO: support navbarLogo from keystone config
 		return (
-			<PrimaryNavItem className={this.props.currentSectionKey === 'dashboard' ? 'active' : null} href="/keystone" title={'Dashboard - ' + this.props.brand}>
+			<PrimaryNavItem className={this.props.currentSectionKey === 'dashboard' ? 'active' : null} href={Keystone.adminPath} title={'Dashboard - ' + this.props.brand}>
 				<span className="octicon octicon-home" />
 			</PrimaryNavItem>
 		);
@@ -75,7 +74,7 @@ var PrimaryNavigation = React.createClass({
 		if (!this.props.sections || !this.props.sections.length) return null;
 
 		return this.props.sections.map((section) => {
-			let href = section.lists[0].external ? section.lists[0].path : ('/keystone/' + section.lists[0].path);
+			let href = section.lists[0].external ? section.lists[0].path : `${Keystone.adminPath}/${section.lists[0].path}`;
 			let className = (this.props.currentSectionKey && this.props.currentSectionKey === section.key) ? 'active' : null;
 
 			return (
@@ -92,15 +91,14 @@ var PrimaryNavigation = React.createClass({
 			<nav className="primary-navbar">
 				<Container clearfix>
 					<ul className="app-nav app-nav--primary app-nav--left">
-						{this.renderFrontLink()}
 						{this.renderBrand()}
 						{this.renderNavigation()}
 					</ul>
-					{this.renderSignout()}
+					{this.renderFrontLink()}
 				</Container>
 			</nav>
 		);
-	}
+	},
 });
 
 module.exports = PrimaryNavigation;

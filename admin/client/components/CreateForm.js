@@ -1,59 +1,58 @@
-var _ = require('underscore');
-var React = require('react');
-var Fields = require('../fields');
-var InvalidFieldType = require('./InvalidFieldType');
-var { Alert, Button, Form, Modal } = require('elemental');
-
-
-// TODO: remove dependency on underscore
+import React from 'react';
+import Fields from '../fields';
+import InvalidFieldType from './InvalidFieldType';
+import { Alert, Button, Form, Modal } from 'elemental';
+import xhr from 'xhr';
 
 var CreateForm = React.createClass({
-
 	displayName: 'CreateForm',
-
+	propTypes: {
+		err: React.PropTypes.object,
+		isOpen: React.PropTypes.bool,
+		list: React.PropTypes.object,
+		onCancel: React.PropTypes.func,
+		onCreate: React.PropTypes.func,
+		values: React.PropTypes.object,
+	},
 	getDefaultProps () {
 		return {
 			err: null,
 			values: {},
-			isOpen: false
+			isOpen: false,
 		};
 	},
-
 	getInitialState () {
-		var values = this.props.values;
-		_.each(this.props.list.fields, function(field) {
+		var values = Object.assign({}, this.props.values);
+
+		Object.keys(this.props.list.fields).forEach(key => {
+			var field = this.props.list.fields[key];
+
 			if (!values[field.path]) {
 				values[field.path] = field.defaultValue;
 			}
 		});
 		return {
-			values: values
+			values: values,
 		};
 	},
-
 	handleChange (event) {
-		var values = this.state.values;
+		var values = Object.assign({}, this.state.values);
 		values[event.path] = event.value;
 		this.setState({
-			values: values
+			values: values,
 		});
 	},
-
-	componentDidUpdate (prevProps, prevState) {
+	componentDidUpdate (prevProps) {
 		if (this.props.isOpen !== prevProps.isOpen) {
-			document.body.style.overflow = (this.props.isOpen) ? 'hidden' : '';
-			if (this.refs.focusTarget) {
-				this.refs.focusTarget.focus();
-			}
+			// focus the focusTarget after the "open modal" CSS animation has started
+			setTimeout(() => this.refs.focusTarget && this.refs.focusTarget.focus(), 0);
 		}
 	},
-
 	componentDidMount () {
 		if (this.refs.focusTarget) {
 			this.refs.focusTarget.focus();
 		}
 	},
-
 	getFieldProps (field) {
 		var props = Object.assign({}, field);
 		props.value = this.state.values[field.path];
@@ -64,14 +63,38 @@ var CreateForm = React.createClass({
 		return props;
 	},
 
+	submitForm (event) {
+		// If there is an onCreate function,
+		// 	create new item using async create api instead
+		// 	of using a POST request to the list endpoint.
+		if (this.props.onCreate) {
+			event.preventDefault();
+			xhr({
+				url: `${Keystone.adminPath}/api/${this.props.list.path}/create`,
+				responseType: 'json',
+				method: 'POST',
+				json: this.state.values
+			}, (err, resp, data) => {
+				if (resp.statusCode === 200) {
+					this.props.onCreate(data);
+					this.setState({
+						values: {}
+					}); // Clear form
+				} else {
+					// TODO: Display errors
+				}
+			});
+		}
+	},
+
 	renderAlerts () {
 		if (!this.props.err || !this.props.err.errors) return;
 
 		var alertContent;
 		var errorCount = Object.keys(this.props.err.errors).length;
 
-		var messages = this.props.err.errors.map((err, path) => {
-			return errorCount > 1 ? <li key={path}>{err.message}</li> : <div key={path}>{err.message}</div>;
+		var messages = Object.keys(this.props.err.errors).map((path) => {
+			return errorCount > 1 ? <li key={path}>{this.props.err.errors[path].message}</li> : <div key={path}>{this.props.err.errors[path].message}</div>;
 		});
 
 		if (errorCount > 1) {
@@ -87,13 +110,12 @@ var CreateForm = React.createClass({
 
 		return <Alert type="danger">{alertContent}</Alert>;
 	},
-
 	renderForm () {
-
 		if (!this.props.isOpen) return;
+
 		var form = [];
 		var list = this.props.list;
-		var formAction = '/keystone/' + list.path;
+		var formAction = `${Keystone.adminPath}/${list.path}`;
 		var nameField = this.props.list.nameField;
 		var focusRef;
 
@@ -108,8 +130,8 @@ var CreateForm = React.createClass({
 			form.push(React.createElement(Fields[nameField.type], nameFieldProps));
 		}
 
-		_.each(list.initialFields, function(path) {
-			var field = list.fields[path];
+		Object.keys(list.initialFields).forEach(key => {
+			var field = list.fields[list.initialFields[key]];
 			if ('function' !== typeof Fields[field.type]) {
 				form.push(React.createElement(InvalidFieldType, { type: field.type, path: field.path, key: field.path }));
 				return;
@@ -119,10 +141,10 @@ var CreateForm = React.createClass({
 				fieldProps.ref = focusRef = 'focusTarget';
 			}
 			form.push(React.createElement(Fields[field.type], fieldProps));
-		}, this);
+		});
 
 		return (
-			<Form type="horizontal" encType="multipart/form-data" method="post" action={formAction} className="create-form">
+			<Form type="horizontal" encType="multipart/form-data" method="post" action={formAction} onSubmit={this.submitForm} className="create-form">
 				<input type="hidden" name="action" value="create" />
 				<input type="hidden" name={Keystone.csrf.key} value={Keystone.csrf.value} />
 				<Modal.Header text={'Create a new ' + list.singular} onClose={this.props.onCancel} showCloseButton />
@@ -137,15 +159,13 @@ var CreateForm = React.createClass({
 			</Form>
 		);
 	},
-
 	render () {
 		return (
 			<Modal isOpen={this.props.isOpen} onCancel={this.props.onCancel} backdropClosesModal>
 				{this.renderForm()}
 			</Modal>
 		);
-	}
-
+	},
 });
 
 module.exports = CreateForm;

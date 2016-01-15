@@ -18,7 +18,7 @@ function ts() {
 }
 
 function logInit(file) {
-	console.log(chalk.grey('Watching ' + chalk.black.underline('keystone/admin/src/' + file) + ' for changes...'));
+	console.log(chalk.grey('Watching ') + chalk.underline('keystone/admin/src/' + file) + chalk.grey(' for changes...'));
 }
 
 function logRebuild(file) {
@@ -60,6 +60,8 @@ module.exports = function(file, name) {
 			opts.debug = true;
 			opts.cache = {};
 			opts.packageCache = {};
+		}
+		if (devWriteDisc) {
 			opts.fullPaths = true;
 		}
 		if (name) {
@@ -69,8 +71,8 @@ module.exports = function(file, name) {
 			b = browserify('./' + file, opts);
 		}
 		b.transform(babelify.configure({
-			ignore: ['**/lib/**'],
-			plugins: [require('babel-plugin-object-assign')]
+			plugins: [require('babel-plugin-transform-object-rest-spread'), require('babel-plugin-transform-object-assign')],
+			presets: [require('babel-preset-es2015'), require('babel-preset-react')],
 		}));
 		b.exclude('FieldTypes');
 		packages.forEach(function(i) {

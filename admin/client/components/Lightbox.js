@@ -11,9 +11,9 @@ var Lightbox = React.createClass({
 		backdropClosesModal: React.PropTypes.bool,
 		className: React.PropTypes.string,
 		enableKeyboardInput: React.PropTypes.bool,
-		initialImage: React.PropTypes.number,
 		height: React.PropTypes.number,
 		images: React.PropTypes.array,
+		initialImage: React.PropTypes.number,
 		isOpen: React.PropTypes.bool,
 		onCancel: React.PropTypes.func,
 		showCloseButton: React.PropTypes.bool,
@@ -30,12 +30,12 @@ var Lightbox = React.createClass({
 	},
 	getInitialState () {
 		return {
-			currentImage: this.props.initialImage
+			currentImage: this.props.initialImage,
 		};
 	},
 	componentWillReceiveProps (nextProps) {
 		this.setState({
-			currentImage: nextProps.initialImage
+			currentImage: nextProps.initialImage,
 		});
 
 		if (nextProps.isOpen && nextProps.enableKeyboardInput) {
@@ -79,14 +79,14 @@ var Lightbox = React.createClass({
 
 	renderArrowPrev () {
 		return (
-			<Transition transitionName="react-transitiongroup-fade">
+			<Transition transitionName="react-transitiongroup-fade" transitionEnterTimeout={200} transitionLeaveTimeout={200}>
 				{(this.state.currentImage > 0) && <button type="button" style={Object.assign({}, styles.arrow, styles.arrowPrev)} onClick={this.gotoPrevious} className="octicon octicon-chevron-left" />}
 			</Transition>
 		);
 	},
 	renderArrowNext () {
 		return (
-			<Transition transitionName="react-transitiongroup-fade">
+			<Transition transitionName="react-transitiongroup-fade" transitionEnterTimeout={200} transitionLeaveTimeout={200}>
 				{(this.state.currentImage < (this.props.images.length - 1)) && <button type="button" style={Object.assign({}, styles.arrow, styles.arrowNext)} onClick={this.gotoNext} className="octicon octicon-chevron-right" />}
 			</Transition>
 		);
@@ -119,7 +119,7 @@ var Lightbox = React.createClass({
 		if (!images || !images.length) return;
 
 		return (
-			<Transition transitionName="react-transitiongroup-fade" style={styles.imageContainer} component="div">
+			<Transition transitionName="react-transitiongroup-fade" style={styles.imageContainer} component="div" transitionEnterTimeout={200} transitionLeaveTimeout={200}>
 				<img key={'image' + currentImage} src={images[currentImage]} style={styles.image} />
 			</Transition>
 		);
@@ -129,15 +129,15 @@ var Lightbox = React.createClass({
 
 		return (
 			<Portal {...props}>
-				<Transition transitionName="react-transitiongroup-fade" component="div">
+				<Transition transitionName="react-transitiongroup-fade" component="div" transitionEnterTimeout={200} transitionLeaveTimeout={200}>
 					{this.renderDialog()}
 				</Transition>
-				<Transition transitionName="react-transitiongroup-fade" component="div">
+				<Transition transitionName="react-transitiongroup-fade" component="div" transitionEnterTimeout={200} transitionLeaveTimeout={200}>
 					{this.renderBackdrop()}
 				</Transition>
 			</Portal>
 		);
-	}
+	},
 });
 
 const styles = {

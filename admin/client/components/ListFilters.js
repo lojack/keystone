@@ -1,34 +1,32 @@
-const React = require('react');
-const classNames = require('classnames');
-const filterComponents = require('../filters');
-const CurrentListStore = require('../stores/CurrentListStore');
-
-const Popout = require('./Popout');
-const { Pill } = require('elemental');
+import React from 'react';
+import filterComponents from '../filters';
+import CurrentListStore from '../stores/CurrentListStore';
+import Popout from './Popout';
+import { Pill } from 'elemental';
 
 const Filter = React.createClass({
 	propTypes: {
-		filter: React.PropTypes.object
+		filter: React.PropTypes.object.isRequired,
 	},
 	getInitialState () {
 		return {
-			isOpen: false
+			isOpen: false,
 		};
 	},
 	open () {
 		this.setState({
 			isOpen: true,
-			filterValue: this.props.filter.value
+			filterValue: this.props.filter.value,
 		});
 	},
 	close () {
 		this.setState({
-			isOpen: false
+			isOpen: false,
 		});
 	},
 	updateValue (filterValue) {
 		this.setState({
-			filterValue: filterValue
+			filterValue: filterValue,
 		});
 	},
 	updateFilter (e) {
@@ -41,7 +39,7 @@ const Filter = React.createClass({
 	},
 	render () {
 		let { filter } = this.props;
-		let filterId = 'activeFilter__' + filter.field.path;
+		let filterId = `activeFilter__${filter.field.path}`;
 		let FilterComponent = filterComponents[filter.field.type];
 		return (
 			<span>
@@ -62,7 +60,7 @@ const Filter = React.createClass({
 				</Popout>
 			</span>
 		);
-	}
+	},
 });
 
 const ListFilters = React.createClass({
@@ -79,9 +77,8 @@ const ListFilters = React.createClass({
 		this.setState(this.getStateFromStore());
 	},
 	getStateFromStore () {
-		return {
-			filters: CurrentListStore.getActiveFilters()
-		};
+		let filters = CurrentListStore.getActiveFilters();
+		return { filters };
 	},
 	clearAllFilters () {
 		CurrentListStore.clearAllFilters();
@@ -104,7 +101,7 @@ const ListFilters = React.createClass({
 				{currentFilters}
 			</div>
 		);
-	}
+	},
 });
 
 module.exports = ListFilters;

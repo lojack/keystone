@@ -1,12 +1,17 @@
-import _ from 'underscore';
 import classnames from 'classnames';
 import evalDependsOn from '../utils/evalDependsOn.js';
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { Button, FormField, FormInput, FormNote } from 'elemental';
+import blacklist from 'blacklist';
+
+function isObject(arg) {
+	return Object.prototype.toString.call(arg) === '[object Object]';
+}
 
 function validateSpec(spec) {
 	if (!spec) spec = {};
-	if (!_.isObject(spec.supports)) {
+	if (!isObject(spec.supports)) {
 		spec.supports = {};
 	}
 	if (!spec.focusTargetRef) {
@@ -21,6 +26,7 @@ var Base = module.exports.Base = {
 	},
 	getDefaultProps () {
 		return {
+			adminPath: Keystone.adminPath,
 			inputProps: {},
 			labelProps: {},
 			valueProps: {},
@@ -43,14 +49,14 @@ var Base = module.exports.Base = {
 	},
 	focus () {
 		if (!this.refs[this.spec.focusTargetRef]) return;
-		this.refs[this.spec.focusTargetRef].getDOMNode().focus();
+		ReactDOM.findDOMNode(this.refs[this.spec.focusTargetRef]).focus();
 	},
 	renderNote () {
 		if (!this.props.note) return null;
 		return <FormNote note={this.props.note} />;
 	},
 	renderField () {
-		var props = _.extend(this.props.inputProps, {
+		var props = Object.assign(this.props.inputProps, {
 			autoComplete: 'off',
 			name: this.props.path,
 			onChange: this.valueChanged,
@@ -110,7 +116,6 @@ module.exports.create = function(spec) {
 
 	spec = validateSpec(spec);
 
-	var excludeBaseMethods = [];
 	var field = {
 		spec: spec,
 		displayName: spec.displayName,
@@ -126,18 +131,21 @@ module.exports.create = function(spec) {
 		}
 	};
 
+	var excludeBaseMethods = {};
 	if (spec.mixins) {
-		_.each(spec.mixins, function(mixin) {
-			_.each(mixin, function(method, name) {
-				if (Base[name]) excludeBaseMethods.push(name);
+		spec.mixins.forEach(function(mixin) {
+			Object.keys(mixin).forEach(function(name) {
+				if (Base[name]) {
+					excludeBaseMethods[name] = true;
+				}
 			});
 		});
 	}
 
-	_.extend(field, _.omit(Base, excludeBaseMethods));
-	_.extend(field, _.omit(spec, 'mixins'));
+	Object.assign(field, blacklist(Base, excludeBaseMethods));
+	Object.assign(field, blacklist(spec, 'mixins'));
 
-	if (_.isArray(spec.mixins)) {
+	if (Array.isArray(spec.mixins)) {
 		field.mixins = field.mixins.concat(spec.mixins);
 	}
 

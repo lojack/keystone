@@ -29,10 +29,10 @@ module.exports = function createDynamicRouter(keystone) {
 	if (keystone.get('auth') === true) {
 		// TODO: poor separation of concerns; settings should be defaulted elsewhere
 		if (!keystone.get('signout url')) {
-			keystone.set('signout url', '/keystone/signout');
+			keystone.set('signout url', '/' + keystone.get('admin path') + '/signout');
 		}
 		if (!keystone.get('signin url')) {
-			keystone.set('signin url', '/keystone/signin');
+			keystone.set('signin url', '/' + keystone.get('admin path') + '/signin');
 		}
 		if (!keystone.nativeApp || !keystone.get('session')) {
 			router.all('*', keystone.session.persist);
@@ -62,27 +62,21 @@ module.exports = function createDynamicRouter(keystone) {
 
 	// Init API request helpers
 	router.use('/api', require('../middleware/apiError'));
+	router.use('/api', require('../middleware/logError'));
 
-	// TODO: Move this to ../middleware (...needs to use keystone reference)
-	var initList = function (respectHiddenOption) {
-		return function (req, res, next) {
-			req.list = keystone.list(req.params.list);
-			if (!req.list || (respectHiddenOption && req.list.get('hidden'))) {
-				req.flash('error', 'List ' + req.params.list + ' could not be found.');
-				return res.redirect('');
-			}
-			next();
-		};
-	};
-
+	// Init req with list
+	var initList = require('../middleware/initList')(keystone);
+	// lists
 	router.all('/api/counts', require('../api/counts'));
 	router.get('/api/:list', initList(), require('../api/list/get'));
 	router.get('/api/:list/:format(export.csv|export.json)', initList(), require('../api/list/download'));
+	router.post('/api/:list/create', initList(), require('../api/list/create'));
 	router.post('/api/:list/delete', initList(), require('../api/list/delete'));
+	// items
 	router.get('/api/:list/:id', initList(), require('../api/item/get'));
 	router.post('/api/:list/:id', initList(), require('../api/item/update'));
-	router.post('/api/:list/:id/delete', initList(), require('../api/item/delete'));
-
+	router.post('/api/:list/:id/delete', initList(), require('../api/list/delete'));
+	router.post('/api/:list/:id/sortOrder/:sortOrder/:newOrder', initList(), require('../api/item/sortOrder'));
 	// #6: List Routes
 	router.all('/:list/:page([0-9]{1,5})?', initList(true), require('../routes/list'));
 	router.all('/:list/:item', initList(true), require('../routes/item'));

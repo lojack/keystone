@@ -1,14 +1,8 @@
-var React = require('react');
-var blacklist = require('blacklist');
-var classNames = require('classnames');
-var { Container } = require('elemental');
+import React from 'react';
+import { Container } from 'elemental';
 
 module.exports = React.createClass({
 	displayName: 'Toolbar',
-	propTypes: {
-		className: React.PropTypes.string
-	},
-
 	render () {
 		return (
 			<div {...this.props} className="Toolbar">
@@ -17,8 +11,7 @@ module.exports = React.createClass({
 				</Container>
 			</div>
 		);
-	}
-
+	},
 });
 
 // expose the children to the top level export

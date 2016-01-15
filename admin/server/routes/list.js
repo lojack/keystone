@@ -2,7 +2,7 @@ var keystone = require('../../../');
 var _ = require('underscore');
 var querystring = require('querystring');
 
-exports = module.exports = function(req, res) {
+module.exports = function(req, res) {
 
 	var viewLocals = {
 		validationErrors: {},
@@ -42,7 +42,7 @@ exports = module.exports = function(req, res) {
 				renderView();
 			} else {
 				req.flash('success', 'New ' + req.list.singular + ' ' + req.list.getDocumentName(item) + ' created.');
-				return res.redirect('/keystone/' + req.list.path + '/' + item.id);
+				return res.redirect('/' + keystone.get('admin path') + '/' + req.list.path + '/' + item.id);
 			}
 		});
 
@@ -72,7 +72,7 @@ exports = module.exports = function(req, res) {
 				return renderView();
 			}
 			req.flash('success', 'New ' + req.list.singular + ' ' + req.list.getDocumentName(item) + ' created.');
-			return res.redirect('/keystone/' + req.list.path + '/' + item.id);
+			return res.redirect('/' + keystone.get('admin path') + '/' + req.list.path + '/' + item.id);
 		});
 
 	} else {

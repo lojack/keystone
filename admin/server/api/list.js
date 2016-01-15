@@ -2,7 +2,7 @@ var _ = require('underscore');
 var async = require('async');
 var keystone = require('../../../');
 
-exports = module.exports = function(req, res) {
+module.exports = function(req, res) {
 
 	var sendResponse = function(status) {
 		res.json(status);
@@ -11,7 +11,7 @@ exports = module.exports = function(req, res) {
 	var sendError = function(key, err, msg) {
 		msg = msg || 'API Error';
 		key = key || 'unknown error';
-		msg += ' (' + key + ')';
+		msg += ` (${key})`;
 		console.log(msg + (err ? ':' : ''));
 		if (err) {
 			console.log(err);

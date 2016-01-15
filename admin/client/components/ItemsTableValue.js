@@ -1,6 +1,6 @@
+import React from 'react';
 import blacklist from 'blacklist';
 import classnames from 'classnames';
-import React from 'react';
 
 var ItemsTableValue = React.createClass({
 	displayName: 'ItemsTableValue',
@@ -21,7 +21,7 @@ var ItemsTableValue = React.createClass({
 	render () {
 		let tag = this.props.href ? 'a' : 'div';
 		let className = classnames('ItemList__value', (
-			this.props.field ? ('ItemList__value--' + this.props.field) : null
+			this.props.field ? `ItemList__value--${this.props.field}` : null
 		), {
 			'ItemList__value--truncate': this.props.truncate,
 			'ItemList__link--empty': this.props.empty,
@@ -38,7 +38,7 @@ var ItemsTableValue = React.createClass({
 			props,
 			this.props.children
 		);
-	}
+	},
 });
 
 module.exports = ItemsTableValue;

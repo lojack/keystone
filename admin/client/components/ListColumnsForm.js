@@ -1,21 +1,20 @@
-import classnames from 'classnames';
 import React from 'react';
-import Transition from 'react-addons-css-transition-group';
-
-var CurrentListStore = require('../stores/CurrentListStore');
-var Popout = require('./Popout');
-var PopoutList = require('./PopoutList');
-var { Button, Checkbox, InputGroup, SegmentedControl } = require('elemental');
+import ReactDOM from 'react-dom';
+import CurrentListStore from '../stores/CurrentListStore';
+import Popout from './Popout';
+import PopoutList from './PopoutList';
+import { Button, InputGroup } from 'elemental';
 
 var ListColumnsForm = React.createClass({
 	displayName: 'ListColumnsForm',
-
+	propTypes: {
+		className: React.PropTypes.string.isRequired,
+	},
 	getInitialState () {
 		return {
-			selectedColumns: {}
+			selectedColumns: {},
 		};
 	},
-
 	getSelectedColumnsFromStore () {
 		var selectedColumns = {};
 		CurrentListStore.getActiveColumns().forEach(col => {
@@ -23,20 +22,18 @@ var ListColumnsForm = React.createClass({
 		});
 		return selectedColumns;
 	},
-
 	togglePopout (visible) {
 		this.setState({
 			selectedColumns: this.getSelectedColumnsFromStore(),
 			isOpen: visible,
 		}, () => {
 			if (visible) {
-				React.findDOMNode(this.refs.target).focus();
+				ReactDOM.findDOMNode(this.refs.target).focus();
 			}
 		});
 	},
-
 	toggleColumn (path, value) {
-		let newColumns = this.state.selectedColumns;
+		let newColumns = Object.assign({}, this.state.selectedColumns);
 
 		if (value) {
 			newColumns[path] = value;
@@ -45,15 +42,13 @@ var ListColumnsForm = React.createClass({
 		}
 
 		this.setState({
-			selectedColumns: newColumns
+			selectedColumns: newColumns,
 		});
 	},
-
 	applyColumns () {
 		CurrentListStore.setActiveColumns(Object.keys(this.state.selectedColumns));
 		this.togglePopout(false);
 	},
-
 	renderColumns () {
 		return CurrentListStore.getAvailableColumns().map((el, i) => {
 			if (el.type === 'heading') {
@@ -74,16 +69,15 @@ var ListColumnsForm = React.createClass({
 			);
 		});
 	},
-
 	render () {
 		return (
 			<InputGroup.Section className={this.props.className}>
-				<Button ref="target" id="listHeaderColumnButton" isActive={this.state.isOpen} onClick={this.togglePopout.bind(this, !this.state.isOpen)}>
+				<Button ref="target" id="listHeaderColumnButton" isActive={this.state.isOpen} onClick={() => this.togglePopout(!this.state.isOpen)}>
 					<span className={this.props.className + '__icon octicon octicon-list-unordered'} />
 					<span className={this.props.className + '__label'}>Columns</span>
 					<span className="disclosure-arrow" />
 				</Button>
-				<Popout isOpen={this.state.isOpen} onCancel={this.togglePopout.bind(this, false)} relativeToID="listHeaderColumnButton">
+				<Popout isOpen={this.state.isOpen} onCancel={() => this.togglePopout(false)} relativeToID="listHeaderColumnButton">
 					<Popout.Header title="Columns" />
 					<Popout.Body scrollable>
 						<PopoutList>
@@ -93,13 +87,12 @@ var ListColumnsForm = React.createClass({
 					<Popout.Footer
 						primaryButtonAction={this.applyColumns}
 						primaryButtonLabel="Apply"
-						secondaryButtonAction={this.togglePopout.bind(this, false)}
+						secondaryButtonAction={() => this.togglePopout(false)}
 						secondaryButtonLabel="Cancel" />
 				</Popout>
 			</InputGroup.Section>
 		);
-	}
-
+	},
 });
 
 module.exports = ListColumnsForm;

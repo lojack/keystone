@@ -1,15 +1,13 @@
+'use strict';
+
 import classnames from 'classnames';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import SessionStore from '../stores/SessionStore';
-import { Alert, Button, Form, FormField, FormInput, Spinner } from 'elemental';
+import { Alert, Button, Form, FormField, FormInput } from 'elemental';
 import { createHistory } from 'history';
 
 var history = createHistory();
-
-function wasSignedOut() {
-	return window.location.search === '?signedout';
-}
 
 var SigninView = React.createClass({
 	getInitialState () {
@@ -19,7 +17,7 @@ var SigninView = React.createClass({
 			isAnimating: false,
 			isInvalid: false,
 			invalidMessage: '',
-			signedOut: wasSignedOut()
+			signedOut: window.location.search === '?signedout',
 		};
 	},
 	componentDidMount () {
@@ -27,7 +25,7 @@ var SigninView = React.createClass({
 			history.replaceState({}, window.location.pathname);
 		}
 		if (this.refs.email) {
-			React.findDOMNode(this.refs.email).select();
+			ReactDOM.findDOMNode(this.refs.email).select();
 		}
 	},
 	handleInputChange (e) {
@@ -44,11 +42,11 @@ var SigninView = React.createClass({
 			email: this.state.email,
 			password: this.state.password
 		}, (err, data) => {
-			if (err) {
+			if (err || data && data.error) {
 				this.displayError('The email and password you entered are not valid.');
 			} else {
 				// TODO: Handle custom signin redirections
-				top.location.href = '/keystone';
+				top.location.href = Keystone.adminPath;
 			}
 		});
 	},
@@ -63,14 +61,14 @@ var SigninView = React.createClass({
 	finishAnimation () {
 		if (!this.isMounted()) return;
 		if (this.refs.email) {
-			React.findDOMNode(this.refs.email).select();
+			ReactDOM.findDOMNode(this.refs.email).select();
 		}
 		this.setState({
 			isAnimating: false
 		});
 	},
 	renderBrand () {
-		let logo = { src: '/keystone/images/logo.png', width: 205, height: 68 };
+		let logo = { src: `${Keystone.adminPath}/images/logo.png`, width: 205, height: 68 };
 		if (this.props.logo) {
 			logo = typeof this.props.logo === 'string' ? { src: this.props.logo } : this.props.logo;
 			// TODO: Deprecate this
@@ -90,13 +88,13 @@ var SigninView = React.createClass({
 	},
 	renderUserInfo () {
 		if (!this.props.user) return null;
-		let openKeystoneButton = this.props.userCanAccessKeystone ? <Button href="/keystone" type="primary">Open Keystone</Button> : null;
+		let openKeystoneButton = this.props.userCanAccessKeystone ? <Button href={Keystone.adminPath} type="primary">Open Keystone</Button> : null;
 		return (
 			<div className="auth-box__col">
 				<p>Hi {this.props.user.name.first},</p>
 				<p>You're already signed in.</p>
 				{openKeystoneButton}
-				<Button href="/keystone/signout" type="link-cancel">Sign Out</Button>
+				<Button href={`${Keystone.adminPath}/signout`} type="link-cancel">Sign Out</Button>
 			</div>
 		);
 	},
@@ -151,12 +149,15 @@ var SigninView = React.createClass({
 				</div>
 			</div>
 		);
-	}
+	},
 });
 
-ReactDOM.render(<SigninView
+ReactDOM.render(
+	<SigninView
 		brand={Keystone.brand}
 		logo={Keystone.logo}
 		user={Keystone.user}
 		userCanAccessKeystone={Keystone.userCanAccessKeystone}
-	/>, document.getElementById('signin-view'));
+	/>,
+	document.getElementById('signin-view')
+);

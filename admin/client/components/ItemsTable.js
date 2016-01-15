@@ -1,31 +1,29 @@
-const blacklist = require('blacklist');
-const Columns = require('../columns');
-const CurrentListStore = require('../stores/CurrentListStore');
-const ListControl = require('./ListControl');
-const React = require('react');
-const { Alert } = require('elemental');
+import React from 'react';
+import classnames from 'classnames';
 
-const CONTROL_COLUMN_WIDTH = 26;  // icon + padding
+import Columns from '../columns';
+import CurrentListStore from '../stores/CurrentListStore';
+import ListControl from './ListControl';
+import TableRow from './ItemsTableRow';
+import DrapDrop from './ItemsTableDragDrop';
 
-var ItemsTable = React.createClass({
+const TABLE_CONTROL_COLUMN_WIDTH = 26;  // icon + padding
+
+const ItemsTable = React.createClass({
 	propTypes: {
 		columns: React.PropTypes.array,
-		items: React.PropTypes.array,
+		items: React.PropTypes.object,
 		list: React.PropTypes.object,
-	},
-	deleteItem (item, e) {
-		if (!e.altKey && !confirm('Are you sure you want to delete ' + item.name + '?')) return;
-		CurrentListStore.deleteItem(item);
 	},
 	renderCols () {
 		var cols = this.props.columns.map((col) => <col width={col.width} key={col.path} />);
 		// add delete col when applicable
 		if (!this.props.list.nodelete) {
-			cols.unshift(<col width={CONTROL_COLUMN_WIDTH} key="delete" />);
+			cols.unshift(<col width={TABLE_CONTROL_COLUMN_WIDTH} key="delete" />);
 		}
 		// add sort col when applicable
 		if (this.props.list.sortable) {
-			cols.unshift(<col width={CONTROL_COLUMN_WIDTH} key="sortable" />);
+			cols.unshift(<col width={TABLE_CONTROL_COLUMN_WIDTH} key="sortable" />);
 		}
 		return <colgroup>{cols}</colgroup>;
 	},
@@ -41,36 +39,40 @@ var ItemsTable = React.createClass({
 		});
 		return <thead><tr>{cells}</tr></thead>;
 	},
-	renderRow (item) {
-		var cells = this.props.columns.map((col, i) => {
-			var ColumnType = Columns[col.type] || Columns.__unrecognised__;
-			var linkTo = !i ? `/keystone/${this.props.list.path}/${item.id}` : undefined;
-			return <ColumnType key={col.path} list={this.props.list} col={col} data={item} linkTo={linkTo} />;
-		});
-		// add sortable icon when applicable
-		if (this.props.list.sortable) {
-			cells.unshift(<ListControl key="_sort" onClick={this.reorderItems} type="sortable" />);
-		}
-		// add delete icon when applicable
-		if (!this.props.list.nodelete) {
-			cells.unshift(<ListControl key="_delete" onClick={(e) => this.deleteItem(item, e)} type="delete" />);
-		}
-		return <tr key={'i' + item.id}>{cells}</tr>;
-	},
 	render () {
-		var sortable = this.props.list.sortable;
-		var tableClass = sortable ? 'sortable ' : '';
-		tableClass += 'Table ItemList';
-		return (
-			<table cellPadding="0" cellSpacing="0" className={tableClass}>
-				{this.renderCols()}
-				{this.renderHeaders()}
-				<tbody>
-					{this.props.items.map(this.renderRow)}
+		if (!this.props.items.results.length) return null;
+
+		let tableBody;
+		if (this.props.list.sortable) {
+			tableBody = <DrapDrop { ...this.props } />;
+		} else {
+			tableBody = (
+				<tbody >
+					{this.props.items.results.map((item, i) => {
+						return (
+							<TableRow key={item.id}
+								deleteTableItem={this.props.deleteTableItem}
+								index={i}
+								sortOrder={item.sortOrder || 0}
+								id={item.id}
+								item={item}
+								{ ...this.props }
+							/>
+						);
+					})}
 				</tbody>
-			</table>
+			);
+		}
+		return (
+			<div className="ItemList-wrapper">
+				<table cellPadding="0" cellSpacing="0" className="Table ItemList">
+					{this.renderCols()}
+					{this.renderHeaders()}
+					{tableBody}
+				</table>
+			</div>
 		);
-	}
+	},
 });
 
-module.exports = ItemsTable;
+module.exports = exports = ItemsTable;
